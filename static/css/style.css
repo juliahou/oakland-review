@@ -1,0 +1,26 @@
+body {
+    height: 100%;
+    font-family: 'Lora', serif;
+}
+
+.header {
+    text-align: center;
+}
+
+.brand {
+    overflow: auto;
+    margin: 0 auto;
+    display: inline-block;
+}
+
+.brand>img {
+    height: 200px;
+    width: 200px;
+    margin-top: 20px;
+}
+
+.name {
+    margin-top: 10px;
+    font-size: 25px;
+    color: #aeaeae;
+}
