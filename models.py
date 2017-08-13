@@ -61,7 +61,19 @@ if __name__ == '__main__':
 
 @app.route('/')
 def hello_world():
-    return render_template('base.html')
+    return render_template('home.html')
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/submit')
+def submit():
+    return render_template('submit.html')
+
+@app.route('/read')
+def read():
+    return render_template('read.html')
 
 @app.route('/issue/<int:issue_id>')
 def show_issue(issue_id):
