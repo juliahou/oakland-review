@@ -1,4 +1,15 @@
-from app import app, db
+#!flask/bin/python
+
+from flask import Flask, render_template
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+app.config.from_object('config')
+db = SQLAlchemy(app)
 
 app.config['SECRET_KEY'] = 'meow'
 
@@ -32,6 +43,10 @@ class Issue(db.Model):
     def __repr__(self):
         return '<Issue %d>' % self.num
 
+admin = Admin(app, name='Admin', template_mode='bootstrap3')
+admin.add_view(ModelView(User, db.session))
+admin.add_view(ModelView(Issue, db.session))
+
 def init_db():
     db.create_all()
 
@@ -43,3 +58,11 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
+
+@app.route('/')
+def hello_world():
+    return render_template('base.html')
+
+@app.route('/issue/<int:issue_id>')
+def show_issue(issue_id):
+    return render_template('issue.html', issue_id=issue_id)
