@@ -1,10 +1,12 @@
 #!flask/bin/python
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
-from flask.ext.login import LoginManager
+from flask_login import LoginManager
+from flask_migrate import Migrate
+import click
 
 class MyView(BaseView):
     def is_accessible(self):
@@ -15,20 +17,20 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
-app.config.from_object('config')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 db = SQLAlchemy(app)
-
-app.config['SECRET_KEY'] = 'meow'
+migrate = Migrate(app, db)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True)
     email = db.Column(db.String(120), unique=True)
+    password = db.Column(db.String(80), unique=False)
 
-    # def __init__(self, username='', email=''):
-    #     self.username = username
-    #     self.email = email
+    def __init__(self, email='', username='', password=''):
+        self.username = username
+        self.email = email
+        self.password = password
     # def __init__(self, **kwargs):
     #     for key, value in kwargs.items():
     #         setattr(self, key, value)
@@ -67,17 +69,18 @@ admin = Admin(app, name='Admin', template_mode='bootstrap3')
 admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(Issue, db.session))
 
+@app.cli.command()
 def init_db():
     db.create_all()
 
     # Create a test user
-    new_user = User('a@a.com', 'aaaaaaaa')
-    new_user.display_name = 'Nathan'
+    new_user = User('jjhou@andrew.cmu.edu', 'Julia Hou', 'admin')
+    new_user.display_name = 'Julia'
     db.session.add(new_user)
     db.session.commit()
 
-if __name__ == '__main__':
-    init_db()
+# if __name__ == '__main__':
+#     init_db()
 
 @login_manager.user_loader
 def load_user(id):
@@ -102,3 +105,17 @@ def read():
 @app.route('/issue/<int:issue_id>')
 def show_issue(issue_id):
     return render_template('issue.html', issue_id=issue_id)
+
+@app.route('/login',methods=['GET','POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('login.html')
+    username = request.form['username']
+    password = request.form['password']
+    registered_user = User.query.filter_by(username=username,password=password).first()
+    if registered_user is None:
+        flash('Username or Password is invalid' , 'error')
+        return redirect(url_for('login'))
+    login_user(registered_user)
+    flash('Logged in successfully')
+    return redirect(url_for('admin'))
