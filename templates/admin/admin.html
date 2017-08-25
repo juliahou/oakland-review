@@ -1,0 +1,5 @@
+{% extends 'admin/base.html' %}
+
+{% block access_control %}
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+{% endblock %}
