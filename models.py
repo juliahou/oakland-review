@@ -1,11 +1,19 @@
 #!flask/bin/python
 
 from flask import Flask, render_template
-from flask_admin import Admin
+from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
+from flask.ext.login import LoginManager
+
+class MyView(BaseView):
+    def is_accessible(self):
+        return login.current_user.is_authenticated()
 
 app = Flask(__name__)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 app.config.from_object('config')
@@ -58,6 +66,10 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
 
 @app.route('/')
 def hello_world():
