@@ -68,8 +68,21 @@ class MyAdminIndexView(admin.AdminIndexView):
     @expose('/')
     def index(self):
         if not login.current_user.is_authenticated:
-            return render_template('login.html')
+            return redirect(url_for('.login'))
         return super(MyAdminIndexView, self).index()
+
+    @expose('/login/', methods=('GET', 'POST'))
+    def login(self):
+        if request.method == 'GET':
+            return render_template('login.html')
+        username = request.form['username']
+        password = request.form['password']
+        registered_user = User.query.filter_by(username=username,password=password).first()
+        if registered_user is None:
+            # flash('Username or Password is invalid' , 'error')
+            return render_template('login.html')
+        login_user(registered_user)
+        return redirect(url_for('.index'))
 
 admin = Admin(app, name='Admin', index_view=MyAdminIndexView(), base_template="admin/admin.html", template_mode='bootstrap3')
 admin.add_view(ModelView(User, db.session))
@@ -92,11 +105,6 @@ def init_db():
 def load_user(id):
     return User.query.get(int(id))
 
-@app.route('/admin')
-@login_required
-def admin():
-    pass
-
 @app.route('/')
 def hello_world():
     return render_template('home.html')
@@ -117,20 +125,7 @@ def read():
 def show_issue(issue_id):
     return render_template('issue.html', issue_id=issue_id)
 
-@app.route('/login',methods=['GET','POST'])
-def signin():
-    if request.method == 'GET':
-        return render_template('login.html')
-    username = request.form['username']
-    password = request.form['password']
-    registered_user = User.query.filter_by(username=username,password=password).first()
-    if registered_user is None:
-        # flash('Username or Password is invalid' , 'error')
-        return render_template('login.html')
-    login_user(registered_user)
-    return redirect(url_for('admin.index'))
-
 @app.route('/logout')
 def logout():
     logout_user()
-    return render_template('login.html')
+    return redirect(url_for('admin.login'))
