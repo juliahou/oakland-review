@@ -88,6 +88,11 @@ admin = Admin(app, name='Admin', index_view=MyAdminIndexView(), base_template="a
 admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(Issue, db.session))
 
+@app.template_filter()
+def get_issue_by_id(issue_id):
+    issue = Issue.query.get(issue_id)
+    return issue.embed
+
 @app.cli.command()
 def init_db():
     db.create_all()
